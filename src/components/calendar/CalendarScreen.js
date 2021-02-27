@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import moment from 'moment';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 
 import Navbar from '../ui/Navbar';
+import { AddNewFab } from '../ui/AddNewFab';
 import CalendarEvent from './CalendarEvent';
 import CalendarModal from './CalendarModal';
 import { messages } from '../../helpers/calendar-messages-es';
+import { eventSetActive } from '../../actions/events';
+import { uiOpenModal } from '../../actions/ui';
 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import 'moment/locale/es';
@@ -14,79 +18,69 @@ moment.locale('es');
 
 const localizer = momentLocalizer(moment);
 
-const events = [
-    {
-        title: 'Cumpleaños del jefe',
-        start: moment().toDate(),
-        end: moment().add(2, 'hours').toDate(),
-        bgColor: '#fafafa',
-        notes: 'Comprar el pastel',
-        user: {
-            _id: '123',
-            name: 'Paul'
-        }
-    }
-]
-
 const CalendarScreen = () => {
 
-    const [lastView, setLastView] = useState(localStorage.getItem('lastView') || 'month');
+	const dispatch = useDispatch();
+	const { events } = useSelector(state => state.calendar);
 
-    const onDoubleClick = e => {
-        console.log(e);
-    }
+	const [lastView, setLastView] = useState(localStorage.getItem('lastView') || 'month');
 
-    const onSelectEvent = e => {
-        console.log(e);
-    }
+	const onDoubleClick = e => {
+		console.log('Open Modal');
+		dispatch(uiOpenModal());
+	}
 
-    const onViewChange = e => {
+	const onSelectEvent = event => {
+		console.log(event);
+		dispatch(eventSetActive(event));
+	}
 
-        setLastView(e);
+	const onViewChange = e => {
+		setLastView(e);
+		localStorage.setItem('lastView', e);
+	}
 
-        localStorage.setItem('lastView', e);
+	// Configurar colores
+	const eventStyleGetter = (event, start, end, isSelected) => {
 
-    }
+		const style = {
+			backgroundColor: '#367CF7',
+			borderRadius: '0px',
+			color: 'white',
+			display: 'block',
+			opacity: 0.8
+		}
 
-    // Configurar colores
-    const eventStyleGetter = (event, start, end, isSelected) => {
+		return {
+			style
+		}
+	}
 
-        const style = {
-            backgroundColor: '#367CF7',
-            borderRadius: '0px',
-            color: 'white',
-            display: 'block',
-            opacity: 0.8
-        }
+	return (
+		<div className="calendar-screen">
+			<Navbar />
 
-        return {
-            style
-        }
-    }
+			<Calendar
+				localizer={localizer}
+				events={events}
+				startAccessor="start"
+				endAccessor="end"
+				messages={messages}
+				eventPropGetter={eventStyleGetter}
+				onDoubleClickEvent={onDoubleClick}
+				onSelectEvent={onSelectEvent}
+				onView={onViewChange}
+				view={lastView}
+				components={{
+					event: CalendarEvent
+				}}
+			/>
 
-    return (
-        <div className="calendar-screen">
-            <Navbar />
+			<CalendarModal />
 
-            <Calendar
-                localizer={localizer}
-                events={events}
-                startAccessor="start"
-                endAccessor="end"
-                messages={messages}
-                eventPropGetter={eventStyleGetter}
-                onDoubleClickEvent={onDoubleClick}
-                onSelectEvent={onSelectEvent}
-                onView={onViewChange}
-                view={lastView}
-                components={{
-                    event: CalendarEvent
-                }}
-            />
-
-            <CalendarModal />
-        </div>
-    )
+			<AddNewFab />
+		</div>
+	)
 }
 
 export default CalendarScreen;
