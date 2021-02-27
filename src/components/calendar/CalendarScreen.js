@@ -4,11 +4,12 @@ import moment from 'moment';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 
 import Navbar from '../ui/Navbar';
+import { DeleteEventFab } from '../ui/DeleteEventFab';
 import { AddNewFab } from '../ui/AddNewFab';
 import CalendarEvent from './CalendarEvent';
 import CalendarModal from './CalendarModal';
 import { messages } from '../../helpers/calendar-messages-es';
-import { eventSetActive } from '../../actions/events';
+import { eventClearActiveEvent, eventSetActive } from '../../actions/events';
 import { uiOpenModal } from '../../actions/ui';
 
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -21,7 +22,7 @@ const localizer = momentLocalizer(moment);
 const CalendarScreen = () => {
 
 	const dispatch = useDispatch();
-	const { events } = useSelector(state => state.calendar);
+	const { events, activeEvent } = useSelector(state => state.calendar);
 
 	const [lastView, setLastView] = useState(localStorage.getItem('lastView') || 'month');
 
@@ -38,6 +39,10 @@ const CalendarScreen = () => {
 	const onViewChange = e => {
 		setLastView(e);
 		localStorage.setItem('lastView', e);
+	}
+
+	const onSelectSlot = () => {
+		dispatch(eventClearActiveEvent());
 	}
 
 	// Configurar colores
@@ -69,6 +74,8 @@ const CalendarScreen = () => {
 				eventPropGetter={eventStyleGetter}
 				onDoubleClickEvent={onDoubleClick}
 				onSelectEvent={onSelectEvent}
+				onSelectSlot={onSelectSlot}
+				selectable={true}
 				onView={onViewChange}
 				view={lastView}
 				components={{
@@ -76,9 +83,12 @@ const CalendarScreen = () => {
 				}}
 			/>
 
-			<CalendarModal />
+			{ (activeEvent) && <DeleteEventFab />}
 
 			<AddNewFab />
+
+			<CalendarModal />
+
 		</div>
 	)
 }

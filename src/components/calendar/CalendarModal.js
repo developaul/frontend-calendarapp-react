@@ -5,7 +5,7 @@ import Modal from 'react-modal';
 import DateTimePicker from 'react-datetime-picker';
 import Swal from 'sweetalert2';
 
-import { eventAddNew, eventClearActiveEvent } from '../../actions/events';
+import { eventAddNew, eventClearActiveEvent, eventUpdated } from '../../actions/events';
 import { uiCloseModal } from '../../actions/ui';
 
 const customStyles = {
@@ -25,7 +25,7 @@ const now = moment().minutes(0).seconds(0).add(1, 'hours'),
 	nowPlus1 = now.clone().add(1, 'hours');
 
 const initiEvent = {
-	title: 'Evento',
+	title: '',
 	notes: '',
 	start: now.toDate(),
 	end: nowPlus1.toDate()
@@ -41,12 +41,16 @@ const CalendarModal = () => {
 	const [dateEnd, setDateEnd] = useState(nowPlus1.toDate());
 	const [titleValid, setTitleValid] = useState(true);
 
-	const [{ notes, title, start, end }, setFormValues] = useState(initiEvent);
+	const [formValues, setFormValues] = useState(initiEvent);
+
+	const { notes, title, start, end } = formValues;
 
 	useEffect(() => {
 
 		if (activeEvent) {
 			setFormValues(activeEvent);
+		} else {
+			setFormValues(initiEvent);
 		}
 
 	}, [activeEvent, setFormValues]);
@@ -88,19 +92,20 @@ const CalendarModal = () => {
 		if (title.length < 2)
 			return setTitleValid(false);
 
-		dispatch(eventAddNew({
-			notes,
-			title,
-			start,
-			end,
-			id: new Date().getTime(),
-			user: {
-				_id: '123',
-				name: 'Paul'
-			}
-		}));
-
 		setTitleValid(true);
+
+		if (activeEvent) {
+			dispatch(eventUpdated(formValues));
+		} else {
+			dispatch(eventAddNew({
+				...formValues,
+				id: new Date().getTime(),
+				user: {
+					_id: '123',
+					name: 'Paul'
+				}
+			}));
+		}
 
 		closeModal();
 	}
@@ -123,7 +128,7 @@ const CalendarModal = () => {
 			className="modal"
 			overlayClassName="modal-fondo"
 		>
-			<h1> Nuevo evento </h1>
+			<h1>{(activeEvent) ? 'Editar Evento' : 'Nuevo evento'}</h1>
 			<hr />
 			<form
 				className="container"
